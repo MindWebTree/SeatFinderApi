@@ -1,0 +1,14 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Secrets - never commit real values
+appsettings.Production.json
+*.pfx
+
+## OS
+.DS_Store
+Thumbs.db
