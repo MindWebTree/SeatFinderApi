@@ -12,40 +12,31 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Map snake_case MySQL columns (full_name, token_guid, ...) to PascalCase C# properties
-// (FullName, TokenGuid, ...) automatically. Without this, Dapper only matches columns
-// to properties by exact case-insensitive name and most of our entity mapping would fail.
+
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 builder.Services.Configure<OtpSettings>(builder.Configuration.GetSection("OtpSettings"));
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddHttpClient();
+builder.Services.Configure<TestUserSettings>(builder.Configuration.GetSection("TestUser"));
 
-// ---------------------------------------------------------------------
-// Strongly-typed configuration
-// ---------------------------------------------------------------------
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
-// ---------------------------------------------------------------------
-// Infrastructure (data access via stored procedures)
-// ---------------------------------------------------------------------
 builder.Services.AddSingleton<IDbConnectionFactory, MySqlConnectionFactory>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICounsellingRepository, CounsellingRepository>();
+builder.Services.AddScoped<ICollegeFinderRepository, CollegeFinderRepository>();
 
-// ---------------------------------------------------------------------
-// Application (business logic)
-// ---------------------------------------------------------------------
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICounsellingService, CounsellingService>();
+builder.Services.AddScoped<ICollegeFinderService, CollegeFinderService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-// ---------------------------------------------------------------------
-// MVC + Swagger
-// ---------------------------------------------------------------------
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -78,9 +69,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// ---------------------------------------------------------------------
-// JWT authentication
-// ---------------------------------------------------------------------
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
     ?? throw new InvalidOperationException("JwtSettings section is missing from configuration.");
 
@@ -106,9 +95,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// ---------------------------------------------------------------------
-// CORS
-// ---------------------------------------------------------------------
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultCorsPolicy", policy =>

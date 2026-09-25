@@ -12,4 +12,16 @@ namespace CounsellingApp.Domain.Enum
         DNBHospital= 4,
         SelfFinanced= 5,
     }
+
+
+    public enum CollegeCategory
+    {
+        AIQ = 1,
+        State = 2,
+        Private = 3,
+        Deemed = 4,
+        Trust = 5,
+    }
+
+   
 }

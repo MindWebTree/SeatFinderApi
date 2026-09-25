@@ -6,12 +6,7 @@ using Dapper;
 
 namespace CounsellingApp.Infrastructure.Repositories;
 
-/// <summary>
-/// All access goes through stored procedures - no ad-hoc SQL is executed from C#.
-/// Users/Roles are GUID-only, so user-related parameters are Guid/DbType.Guid.
-/// PasswordResetTokens / RefreshTokens are dual-key: their PK travels as a plain
-/// int (fast, auto-increment), while their Guid column is the public id.
-/// </summary>
+
 public class UserRepository : IUserRepository
 {
     private readonly IDbConnectionFactory _connectionFactory;
@@ -149,7 +144,7 @@ public class UserRepository : IUserRepository
         using var connection = _connectionFactory.CreateConnection();
         var parameters = new DynamicParameters();
         parameters.Add("_Identifier", identifier);
-        parameters.Add("_Identifiertype", identifierType);   // matches the typo'd param name exactly
+        parameters.Add("_Identifiertype", identifierType);  
         parameters.Add("_OtpHash", otpHash);
         parameters.Add("_ExpiryDate", expiryDate);
         await connection.ExecuteAsync("USP_API_CREATE_OPT", parameters, commandType: CommandType.StoredProcedure);
@@ -202,5 +197,17 @@ public class UserRepository : IUserRepository
         parameters.Add("_UserId", dbType: DbType.Guid, direction: ParameterDirection.Output, size: 36);
         await connection.ExecuteAsync("USP_API_REGISTER_USER_VIA_OTP", parameters, commandType: CommandType.StoredProcedure);
         return parameters.Get<Guid>("_UserId");
+    }
+
+    public async Task<bool> DeleteAccountAsync(Guid userId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var p = new DynamicParameters();
+        p.Add("_UserId", userId.ToString());
+
+        var deleted = await connection.ExecuteScalarAsync<int>(
+            "USP_API_DELETE_ACCOUNT", p, commandType: CommandType.StoredProcedure);
+
+        return deleted > 0;
     }
 }

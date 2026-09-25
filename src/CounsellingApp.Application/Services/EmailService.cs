@@ -38,7 +38,7 @@ public class EmailService : IEmailService
 
     public async Task SendOtpEmailAsync(string toEmail, string otpCode)
     {
-        // OtpSettings:MailSubject is a format string, e.g. "{0}: Security code".
+        
         var subject = string.IsNullOrWhiteSpace(_otpSettings.MailSubject)
             ? "Your verification code"
             : string.Format(_otpSettings.MailSubject, "Counselling App");

@@ -9,5 +9,5 @@ public interface IAuthService
     Task LoginAsync(LoginRequestDto request);
     Task<LoginResponseDto> VerifyLoginOtpAsync(VerifyLoginOtpRequestDto request);
     Task<LoginResponseDto> RefreshTokenAsync(string refreshToken);
-
+    Task<bool> DeleteAccountAsync(Guid userId);
 }

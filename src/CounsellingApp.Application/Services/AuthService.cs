@@ -17,19 +17,21 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly ISmsService _smsService;
     private readonly JwtSettings _jwtSettings;
+    private readonly TestUserSettings _testUser;
 
     public AuthService(
         IUserRepository userRepository,
         ITokenService tokenService,
         IEmailService emailService,
         ISmsService smsService,
-        IOptions<JwtSettings> jwtSettings)
+        IOptions<JwtSettings> jwtSettings, IOptions<TestUserSettings> testUser)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _emailService = emailService;
         _smsService = smsService;
         _jwtSettings = jwtSettings.Value;
+        _testUser = testUser.Value;
     }
 
     /// <summary>Creates the account directly - no OTP needed here. The first time this
@@ -60,6 +62,33 @@ public class AuthService : IAuthService
 
     /// <summary>Step 1 of login: send an OTP to an EXISTING account's email or phone.
     /// Errors if no account exists - this endpoint never creates one (Register does that).</summary>
+    //public async Task LoginAsync(LoginRequestDto request)
+    //{
+    //    var identifier = request.EmailOrPhoneNumber.Trim();
+    //    var isEmail = LooksLikeEmail(identifier);
+    //    var normalizedIdentifier = isEmail ? identifier.ToLowerInvariant() : identifier;
+
+    //    var user = isEmail
+    //        ? await _userRepository.GetByEmailOrPhoneAsync(normalizedIdentifier, null)
+    //        : await _userRepository.GetByEmailOrPhoneAsync(null, normalizedIdentifier);
+
+    //    if (user is null)
+    //        throw new AppException("No account found with this email or phone number. Please sign up first.", 404);
+    //    if (!user.IsActive)
+    //        throw new AppException("This account is inactive.", 401);
+
+    //    var otpCode = GenerateOtpCode();
+    //    var otpHash = HashToken(otpCode);
+    //    var expiry = DateTime.UtcNow.AddMinutes(10);
+    //    var identifierType = isEmail ? "Email" : "Phone";
+    //    await _userRepository.CreateOtpAsync(normalizedIdentifier, identifierType, otpHash, expiry);
+
+    //    if (isEmail)
+    //        await _emailService.SendOtpEmailAsync(normalizedIdentifier, otpCode);
+    //    else
+    //        await _smsService.SendOtpSmsAsync(normalizedIdentifier, otpCode);
+    //}
+
     public async Task LoginAsync(LoginRequestDto request)
     {
         var identifier = request.EmailOrPhoneNumber.Trim();
@@ -75,10 +104,18 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             throw new AppException("This account is inactive.", 401);
 
-        var otpCode = GenerateOtpCode();
-        var otpHash = HashToken(otpCode);
         var expiry = DateTime.UtcNow.AddMinutes(10);
         var identifierType = isEmail ? "Email" : "Phone";
+
+        
+        if (IsTestUser(user))
+        {
+            await _userRepository.CreateOtpAsync(normalizedIdentifier, identifierType, HashToken(_testUser.StaticOtp), expiry);
+            return;
+        }
+
+        var otpCode = GenerateOtpCode();
+        var otpHash = HashToken(otpCode);
         await _userRepository.CreateOtpAsync(normalizedIdentifier, identifierType, otpHash, expiry);
 
         if (isEmail)
@@ -86,7 +123,6 @@ public class AuthService : IAuthService
         else
             await _smsService.SendOtpSmsAsync(normalizedIdentifier, otpCode);
     }
-
     /// <summary>Step 2 of login: verify the OTP and issue tokens.</summary>
     public async Task<LoginResponseDto> VerifyLoginOtpAsync(VerifyLoginOtpRequestDto request)
     {
@@ -138,6 +174,8 @@ public class AuthService : IAuthService
     /// treat it as a phone number. Good enough since the two formats never overlap.
     /// </summary>
     private static bool LooksLikeEmail(string identifier) => identifier.Contains('@');
+    private bool IsTestUser(User user) =>
+    _testUser.Enabled && _testUser.UserId != Guid.Empty && user.Id == _testUser.UserId;
 
     private async Task<LoginResponseDto> IssueTokensAsync(User user)
     {
@@ -175,4 +213,6 @@ public class AuthService : IAuthService
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
         return Convert.ToHexString(bytes); // what actually gets stored in the database
     }
+    public Task<bool> DeleteAccountAsync(Guid userId) =>
+    _userRepository.DeleteAccountAsync(userId);
 }

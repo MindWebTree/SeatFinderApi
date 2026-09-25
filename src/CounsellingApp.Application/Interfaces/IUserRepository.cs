@@ -31,4 +31,5 @@ public interface IUserRepository
     Task<OtpVerification?> GetLatestOtpAsync(string identifier);
     Task MarkOtpUsedAsync(int otpId);
     Task IncrementOtpAttemptsAsync(int otpId);
+    Task<bool> DeleteAccountAsync(Guid userId);
 }

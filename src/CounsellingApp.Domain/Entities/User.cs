@@ -6,8 +6,8 @@ public class User
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
-    public string? PasswordHash { get; set; }   // nullable now - OTP accounts have no password
-    public int? StateId { get; set; }            // NEW
+    public string? PasswordHash { get; set; }  
+    public int? StateId { get; set; }            
     public int? NeetRank { get; set; }
     public string? Category { get; set; }
     public bool IsEmailVerified { get; set; }

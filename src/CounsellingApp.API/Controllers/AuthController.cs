@@ -1,6 +1,11 @@
 using CounsellingApp.Application.DTOs;
 using CounsellingApp.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CounsellingApp.API.Controllers;
 
@@ -45,5 +50,24 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.RefreshTokenAsync(request.RefreshToken);
         return Ok(new { success = true, data = result });
+    }
+
+    
+    [Authorize]
+    [HttpDelete("delete-account")]
+    public async Task<IActionResult> DeleteAccount()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue("sub");
+
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { success = false, message = "Invalid or missing user identity." });
+
+        var deleted = await _authService.DeleteAccountAsync(userId);
+
+        return deleted
+            ? Ok(new { success = true, message = "Your account has been deleted." })
+            : NotFound(new { success = false, message = "Account not found or already deleted." });
     }
 }

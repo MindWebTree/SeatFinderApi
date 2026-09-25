@@ -9,7 +9,7 @@ namespace CounsellingApp.API.Controllers;
 
 [ApiController]
 [Route("api/counselling")]
-[Authorize] // requires a valid JWT bearer token by default
+[Authorize] 
 public class CounsellingController : ControllerBase
 {
     private readonly ICounsellingService _counsellingService;

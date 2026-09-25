@@ -9,7 +9,7 @@ namespace CounsellingApp.Domain.Entities
         public int Id { get; set; }
         public Guid Guid { get; set; }
         public string Identifier { get; set; } = string.Empty;
-        public string IdentifierType { get; set; } = string.Empty; // "Email" or "Phone"
+        public string IdentifierType { get; set; } = string.Empty; 
         public string OtpHash { get; set; } = string.Empty;
         public DateTime ExpiryDate { get; set; }
         public bool IsUsed { get; set; }

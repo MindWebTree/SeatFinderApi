@@ -17,4 +17,6 @@ public class SeatFinderRequestDto
     public string? StateIds { get; set; }
 
     public string? Quota { get; set; }
+    public string? Rounds { get; set; }
+
 }

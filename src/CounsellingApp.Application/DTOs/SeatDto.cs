@@ -15,7 +15,9 @@ public class SeatDto
     public int? Round1ClosingRank { get; set; }
     public int? Round2ClosingRank { get; set; }
     public int? Round3ClosingRank { get; set; }
+    public int? StrayVacancyClosingRank { get; set; }
 
     /// <summary>Round1ClosingRank minus the user's rank. Negative = closed before you.</summary>
     public int RankDifference { get; set; }
+    public int? EffectiveClosingRank { get; set; }
 }
